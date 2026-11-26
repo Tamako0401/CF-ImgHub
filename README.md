@@ -82,7 +82,9 @@
 
 准备：一个 Cloudflare 账户（免费版即可）和一个 GitHub 账户，想用自己的域名需要将其托管在 Cloudflare。
 
-### 第 1 步：Fork 并部署
+### 第 1 步：部署到现有 R2 桶
+
+本 fork 已在 `wrangler.jsonc` 中将 `R2_MAIN` 绑定到现有的 `blog-image-hosting` 桶。部署时选择该桶所在的 Cloudflare 账户，直接导入本仓库即可。
 
 部署时要用到下面 5 个密钥：
 
@@ -96,20 +98,19 @@
 
 随机字符串可以用密码管理器生成，或在终端运行 `openssl rand -hex 32`。名称区分大小写，值的前后不要带空格。
 
-1. [Fork 本仓库](https://github.com/TG-Twilight/CF-ImgHub/fork) 到你的 GitHub 账户
-2. 打开 [Cloudflare 控制台](https://dash.cloudflare.com/)，左侧选「R2 对象存储」→「创建存储桶」，名称填 `cf-imghub`
-3. 左侧选「Workers 和 Pages」→「创建」→「导入存储库」
-4. 第一次使用要先连接 GitHub：点「连接 GitHub」，在跳出的 GitHub 页面选择你的账户，安装并授权 **Cloudflare Workers and Pages** 应用。仓库权限选「All repositories」，或选「Only select repositories」并勾选刚 Fork 的仓库
-5. 回到 Cloudflare，选择你的 GitHub 账户和刚 Fork 的仓库，点「下一步」
-6. 项目名称填 `cf-imghub`（必须与仓库里 `wrangler.jsonc` 的 `name` 一致），构建命令填 `npm run build`，部署命令保持 `npx wrangler deploy`
-7. 点「部署」，等待构建完成（约 1–2 分钟）
-8. 进入 `cf-imghub` →「设置」→「变量和机密」，按上表逐个「添加」，类型选「密钥」，最后点「部署」
+1. 打开 [Cloudflare Workers 和 Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages)，选「创建」→「导入存储库」
+2. 第一次使用时，点「连接 GitHub」并授权 **Cloudflare Workers and Pages** 应用，可以只授权 `Tamako0401/CF-ImgHub`
+3. 选择 `Tamako0401/CF-ImgHub`，使用 `main` 分支，点「下一步」
+4. 项目名称填 `cf-imghub`，构建命令填 `npm run build`，部署命令填 `npx wrangler deploy`，点「部署」
+5. 进入 `cf-imghub` →「设置」→「变量和机密」，按上表逐个「添加」，类型选「密钥」，最后点「部署」
 
 完成后会得到一个 `https://cf-imghub.<你的子域>.workers.dev` 地址，已经可以打开使用。
 
 **以后更新**：在你 Fork 的仓库页面点 **Sync fork** →「Update branch」，Cloudflare 会自动重新部署。
 
-### 第 2 步：绑定自己的域名（推荐）
+### 第 2 步：绑定新子域名（可选）
+
+现有图片继续使用原来的 R2 公开链接。为 Worker 绑定单独的子域名，就可以在保留旧链接的同时使用新的上传页和管理页。
 
 `workers.dev` 地址无法读取 Cloudflare 的边缘缓存，每次都要读 R2，因此正式使用强烈建议绑定域名：
 
@@ -119,8 +120,8 @@
 
 ### 第 3 步：确认可以用
 
-1. 打开 `https://img.example.com/`，输入上传密码，传一张图片，复制返回的链接在新标签页打开
-2. 打开 `https://img.example.com/admin`，用管理账号登录，能看到刚才那张图
+1. 打开新 Worker 的首页，输入上传密码，传一张图片并打开返回的链接
+2. 打开新 Worker 的 `/admin`，用管理账号登录，确认能看到桶里的旧图和刚上传的测试图，再用原 R2 链接打开一张旧图
 
 防盗链默认关闭，要开启时，先在设置页的「放行网站」把预置的示例域名换成你博客的域名（子域名一并放行），再打开开关，否则博客里的图片会被拦下。
 

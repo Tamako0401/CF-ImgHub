@@ -13,7 +13,7 @@
   },
 
   "r2_buckets": [
-    { "binding": "R2_MAIN", "bucket_name": "cf-imghub" }
+    { "binding": "R2_MAIN", "bucket_name": "blog-image-hosting" }
   ],
 
   // 登录限速：每个 IP 每分钟 5 次（按机房计数，足以挡住暴力猜密码）

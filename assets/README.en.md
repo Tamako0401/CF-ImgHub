@@ -82,7 +82,9 @@ The server never modifies file bytes.
 
 You need a Cloudflare account (the free plan is fine) and a GitHub account. To use your own domain, it must be hosted on Cloudflare.
 
-### Step 1: fork and deploy
+### Step 1: deploy with the existing R2 bucket
+
+This fork maps `R2_MAIN` to the existing `blog-image-hosting` bucket in `wrangler.jsonc`. Import the repository in the Cloudflare account that owns the bucket.
 
 You will need these five secrets:
 
@@ -96,20 +98,19 @@ You will need these five secrets:
 
 Generate random strings with a password manager or `openssl rand -hex 32`. Names are case-sensitive; no spaces around values.
 
-1. [Fork this repository](https://github.com/TG-Twilight/CF-ImgHub/fork) to your GitHub account
-2. In the [Cloudflare dashboard](https://dash.cloudflare.com/), open **R2 Object Storage** → **Create bucket** and name it `cf-imghub`
-3. Open **Workers & Pages** → **Create** → **Import a repository**
-4. The first time, connect GitHub: click **Connect GitHub**, pick your account on the GitHub page that opens, then install and authorize the **Cloudflare Workers and Pages** app. Grant **All repositories**, or **Only select repositories** and tick your fork
-5. Back in Cloudflare, select your GitHub account and your fork, then click **Next**
-6. Set the project name to `cf-imghub` (it must match `name` in the repo's `wrangler.jsonc`), the build command to `npm run build`, and keep the deploy command `npx wrangler deploy`
-7. Click **Deploy** and wait for the build (about 1–2 minutes)
-8. Open `cf-imghub` → **Settings** → **Variables and Secrets**, **Add** each secret from the table as type **Secret**, then click **Deploy**
+1. Open [Cloudflare Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) and select **Create** → **Import a repository**
+2. If prompted, select **Connect GitHub** and authorize the **Cloudflare Workers and Pages** app for `Tamako0401/CF-ImgHub`
+3. Select `Tamako0401/CF-ImgHub` and the `main` branch, then click **Next**
+4. Set the project name to `cf-imghub`, the build command to `npm run build`, and the deploy command to `npx wrangler deploy`. Click **Deploy**
+5. Open `cf-imghub` → **Settings** → **Variables and Secrets**, **Add** each secret from the table as type **Secret**, then click **Deploy**
 
 You now have a working `https://cf-imghub.<your-subdomain>.workers.dev` address.
 
 **Updating later**: on your fork's GitHub page, click **Sync fork** → **Update branch**; Cloudflare redeploys automatically.
 
-### Step 2: add your own domain (recommended)
+### Step 2: add a separate subdomain (optional)
+
+Keep serving existing images at their current public R2 URLs. A separate Worker subdomain gives the upload and admin pages their own address.
 
 `workers.dev` addresses cannot use the edge cache, so every request reads R2. For real use, adding your own domain is strongly recommended:
 
@@ -119,8 +120,8 @@ You now have a working `https://cf-imghub.<your-subdomain>.workers.dev` address.
 
 ### Step 3: check it works
 
-1. Open `https://img.example.com/`, enter the upload password, upload an image and open the returned link in a new tab
-2. Open `https://img.example.com/admin` and sign in with the admin account; the image should be listed
+1. Open the new Worker's home page, enter the upload password, upload an image, and open the returned link
+2. Open `/admin` on the new Worker and sign in. Check that it lists both the existing images and the test upload, then open an existing image at its original R2 URL
 
 Hotlink protection is off by default. Before turning it on, replace the sample domains under "Allowed sites" on the settings page with your blog's domain (subdomains are included), or your blog's images will be blocked.
 
